@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestor Financeiro Pessoal</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" type="image/png" href="assets/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/icon-192.png">
+  <link rel="manifest" href="site.webmanifest">
+  <meta name="theme-color" content="#2ecc71">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar__header">
+        <div class="sidebar__logo">
+          <div class="sidebar__logo-icon">💰</div>
+          <span>Minhas Finanças</span>
+        </div>
+      </div>
+      <nav class="sidebar__nav">
+        <div class="sidebar__section">
+          <div class="sidebar__title">Menu</div>
+          <div class="sidebar__menu">
+            <button class="sidebar__item active" onclick="showPage('dashboard')">
+              <span class="sidebar__icon">📊</span>
+              <span>Dashboard</span>
+            </button>
+            <button class="sidebar__item" onclick="showPage('history')">
+              <span class="sidebar__icon">📋</span>
+              <span>Histórico</span>
+            </button>
+          </div>
+        </div>
+        <div class="sidebar__section">
+          <div class="sidebar__title">Filtrar por Tipo</div>
+          <div class="sidebar__menu">
+            <button class="sidebar__item" onclick="filterByType('income')" id="filterIncome">
+              <span class="sidebar__icon" style="color: var(--color-income)">⬆</span>
+              <span>Entradas</span>
+            </button>
+            <button class="sidebar__item" onclick="filterByType('expense')" id="filterExpense">
+              <span class="sidebar__icon" style="color: var(--color-expense)">⬇</span>
+              <span>Saídas</span>
+            </button>
+            <button class="sidebar__item" onclick="filterByType('reserve')" id="filterReserve">
+              <span class="sidebar__icon" style="color: var(--color-reserve)">🏦</span>
+              <span>Reservas</span>
+            </button>
+          </div>
+        </div>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <header class="header">
+        <div class="header__left">
+          <button class="menu-toggle" id="menuToggle" onclick="toggleMenu()">☰</button>
+          <h1 class="header__title" id="pageTitle">Dashboard</h1>
+        </div>
+        <button class="btn btn-primary" onclick="openModal()">
+          <span>+</span>
+          <span>Nova Transação</span>
+        </button>
+      </header>
+
+      <div class="content">
+        <div id="dashboardPage">
+          <div class="page-header">
+            <h2 class="page-title">Visão Geral</h2>
+            <div class="page-subtitle">
+              <div class="month-navigator">
+                <button class="month-btn" onclick="changeMonth(-1)" title="Mês anterior">‹</button>
+                <span class="month-display" id="monthDisplay">Carregando...</span>
+                <button class="month-btn" onclick="changeMonth(1)" title="Próximo mês">›</button>
+              </div>
+              <button id="currentMonthBadge" class="current-month-badge hidden" onclick="resetToCurrentMonth()">
+                Voltar ao mês atual
+              </button>
+            </div>
+          </div>
+
+          <div class="kpi-grid">
+            <div class="kpi-card balance">
+              <div class="kpi-card__icon balance">⚖️</div>
+              <div>
+                <div class="kpi-card__label">Saldo do Mês</div>
+                <div class="kpi-card__value" id="balanceValue">R$ 0,00</div>
+                <div class="kpi-card__comparison" id="balanceComparison"></div>
+              </div>
+            </div>
+            <div class="kpi-card income">
+              <div class="kpi-card__icon income">📈</div>
+              <div>
+                <div class="kpi-card__label">Entradas</div>
+                <div class="kpi-card__value income" id="incomeValue">R$ 0,00</div>
+              </div>
+            </div>
+            <div class="kpi-card expense">
+              <div class="kpi-card__icon expense">📉</div>
+              <div>
+                <div class="kpi-card__label">Saídas</div>
+                <div class="kpi-card__value expense" id="expenseValue">R$ 0,00</div>
+              </div>
+            </div>
+            <div class="kpi-card reserve">
+              <div class="kpi-card__icon reserve">🏦</div>
+              <div>
+                <div class="kpi-card__label">Reservas</div>
+                <div class="kpi-card__value reserve" id="reserveValue">R$ 0,00</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="dashboard-grid">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">📊 Distribuição Financeira</h3>
+              </div>
+              <div class="chart-wrapper">
+                <div class="donut-container">
+                  <svg class="donut-chart" viewBox="0 0 200 200" id="mainChart">
+                    <circle cx="100" cy="100" r="80" fill="none" stroke="#E5E7EB" stroke-width="20"/>
+                  </svg>
+                  <div class="donut-center">
+                    <div class="donut-value" id="chartTotal">R$ 0</div>
+                    <div class="donut-label" id="chartLabel">Total Entradas</div>
+                  </div>
+                </div>
+                <div class="chart-legend" id="chartLegend"></div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">📋 Resumo por Categoria</h3>
+              </div>
+              <div id="categoriesSummary">
+                <div class="empty">
+                  <div class="empty-icon">📊</div>
+                  <p>Sem dados para exibir</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="history-section">
+            <div class="history-header">
+              <h3 class="card-title">🕐 Movimentações do Mês</h3>
+              <button class="btn btn-secondary btn-sm" onclick="showPage('history')">Ver tudo</button>
+            </div>
+            <div class="history-list" id="recentHistory">
+              <div class="empty">
+                <div class="empty-icon">📝</div>
+                <p>Nenhuma transação registrada neste mês</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="historyPage" class="hidden">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <h2 class="page-title">Histórico Completo</h2>
+              <p class="page-subtitle" id="historySubtitle" style="margin-top: 0.25rem;">Todas as suas transações</p>
+              <div id="activeFilterIndicator" style="margin-top: 0.5rem;"></div>
+            </div>
+            <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+              <div class="month-navigator">
+                <button class="month-btn" onclick="changeMonth(-1)">‹</button>
+                <span class="month-display" id="historyMonthDisplay">Mês atual</span>
+                <button class="month-btn" onclick="changeMonth(1)">›</button>
+              </div>
+              <button class="btn btn-secondary" onclick="clearFilter()">Limpar Filtros</button>
+            </div>
+          </div>
+
+          <div id="fullHistory">
+            <div class="empty">
+              <div class="empty-icon">📋</div>
+              <p>Nenhuma transação encontrada</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalTitle">Nova Transação</h3>
+        <button class="modal-close" onclick="closeModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <form id="transactionForm" onsubmit="return false;">
+          <input type="hidden" id="editId">
+
+          <div class="type-selector">
+            <div class="type-option">
+              <input type="radio" name="type" id="typeIncome" value="income" checked onchange="updateCategories()">
+              <label for="typeIncome">
+                <span class="type-icon">📈</span>
+                <span>Entrada</span>
+              </label>
+            </div>
+            <div class="type-option">
+              <input type="radio" name="type" id="typeExpense" value="expense" onchange="updateCategories()">
+              <label for="typeExpense">
+                <span class="type-icon">📉</span>
+                <span>Saída</span>
+              </label>
+            </div>
+            <div class="type-option">
+              <input type="radio" name="type" id="typeReserve" value="reserve" onchange="updateCategories()">
+              <label for="typeReserve">
+                <span class="type-icon">🏦</span>
+                <span>Reserva</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Categoria *</label>
+            <select class="form-select" id="category" required>
+              <option value="">Selecione...</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Valor (R$) *</label>
+              <input type="number" class="form-input" id="amount" step="0.01" min="0.01" max="999999999" placeholder="0,00" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Data *</label>
+              <input type="date" class="form-input" id="date" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Descrição <small style="color: var(--color-gray-400); font-weight: normal;">(opcional)</small></label>
+            <input type="text" class="form-input" id="description" placeholder="Ex: Salário mensal" maxlength="200" autocomplete="off">
+          </div>
+
+          <div class="checkbox-wrapper" id="reserveOptions" style="display: none;">
+            <input type="checkbox" id="deductFromBalance" checked>
+            <label for="deductFromBalance">Deduzir do saldo disponível</label>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+        <button type="button" class="btn btn-primary" onclick="saveTransaction()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
