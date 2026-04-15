@@ -1340,17 +1340,18 @@ details[open] > summary .tree-chevron { transform: rotate(90deg); }
   }
 }
 
-/* — SCROLL RESUMO POR CATEGORIA */
+/* ===== SCROLL RESUMO POR CATEGORIA ===== */
 .card:has(#categoriesSummary) {
   display: flex;
   flex-direction: column;
-  max-height: 520px;
+  max-height: 480px;
+  overflow: hidden;
 }
 
 #categoriesSummary {
   flex: 1;
   min-height: 0;
-  max-height: 380px;
+  max-height: 360px;
   overflow-y: auto;
   overflow-x: hidden;
   padding-right: var(--space-2);
