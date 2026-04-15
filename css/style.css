@@ -1346,8 +1346,8 @@ details[open] > summary .tree-chevron { transform: rotate(90deg); }
 .card:has(#categoriesSummary) {
   display: flex;
   flex-direction: column;
-  height: 420px; /* Altura fixa total do card */
-  max-height: 420px;
+  height: auto; /* Altura fixa total do card */
+  max-height: auto;
   overflow: hidden;
 }
 
