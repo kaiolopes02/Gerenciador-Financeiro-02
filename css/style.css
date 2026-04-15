@@ -447,6 +447,17 @@ body {
   box-shadow: 0 2px 4px rgba(0,0,0,0.06); /* AUMENTADO */
 }
 
+.card:has(#categoriesSummary) {
+  display: flex;
+  flex-direction: column;
+}
+
+#categoriesSummary {
+  flex: 1;
+  min-height: 0;
+}
+
+
 .card-header { 
   display: flex; 
   justify-content: space-between; 
