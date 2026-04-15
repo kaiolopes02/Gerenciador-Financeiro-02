@@ -689,13 +689,17 @@ details[open] > summary .cat-tree-chevron { transform: rotate(90deg); }
   color: var(--color-gray-800);
 }
 
-/* SCROLL RESUMO POR CATEGORIA */
+/* SCROLL RESUMO POR CATEGORIA - CORRIGIDO */
 #categoriesSummary {
   max-height: 380px;
   overflow-y: auto;
   overflow-x: hidden;
   padding-right: var(--space-2);
   scroll-behavior: smooth;
+  
+  /* NOVO: Garantir que o container não expanda */
+  flex-shrink: 0;
+  min-height: 0;
 }
 
 /* Estilização da scrollbar para consistência visual */
@@ -717,9 +721,23 @@ details[open] > summary .cat-tree-chevron { transform: rotate(90deg); }
   background: var(--color-gray-400);
 }
 
-/* Garantir que o cat-tree respeite o container */
+/* CORREÇÃO: O cat-tree deve respeitar o scroll do container pai */
 #categoriesSummary .cat-tree {
   max-height: none;
+  /* NOVO: Garantir que não haja overflow interno que quebre o layout */
+  overflow: visible;
+}
+
+/* NOVO: Garantir que o card não expanda com o conteúdo */
+#categoriesSummary .card {
+  overflow: hidden;
+}
+
+/* NOVO: Se o cat-tree-type estiver expandido, ainda respeita o container */
+#categoriesSummary .cat-tree-type[open] .cat-tree-body {
+  /* O conteúdo expandido deve ser scrollável se necessário */
+  max-height: 200px;
+  overflow-y: auto;
 }
 
 
