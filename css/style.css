@@ -590,7 +590,28 @@ body {
 #categoriesSummary {
   max-height: 380px;
   overflow-y: auto;
+  overflow-x: hidden;
   padding-right: var(--space-2);
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-gray-300) var(--color-gray-100);
+}
+
+#categoriesSummary::-webkit-scrollbar {
+  width: 6px;
+}
+
+#categoriesSummary::-webkit-scrollbar-track {
+  background: var(--color-gray-100);
+  border-radius: 3px;
+}
+
+#categoriesSummary::-webkit-scrollbar-thumb {
+  background: var(--color-gray-300);
+  border-radius: 3px;
+}
+
+#categoriesSummary::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gray-400);
 }
 
 
