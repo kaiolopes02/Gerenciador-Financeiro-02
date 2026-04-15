@@ -1,5 +1,3 @@
-/* === CSS COMPLETO - ORIGINAL PRESERVADO COM CORREÇÃO DE SCROLL === */
-
 :root {
   --color-primary: #2563EB;
   --color-primary-dark: #1D4ED8;
@@ -440,7 +438,7 @@ body {
   grid-template-columns: 1fr 1fr;
   gap: var(--space-8); /* AUMENTADO: 24px → 32px */
   margin-bottom: var(--space-10); /* 40px */
-  /* CORREÇÃO: Impede que cards se estiquem verticalmente quando conteúdo expande */
+  /* CORREÇÃO MÍNIMA: Impede que cards se estiquem verticalmente */
   align-items: start;
 }
 
@@ -449,11 +447,6 @@ body {
   border-radius: 16px; /* AUMENTADO: 12px → 16px */
   padding: var(--space-6); /* 24px */
   box-shadow: 0 2px 4px rgba(0,0,0,0.06); /* AUMENTADO */
-  /* CORREÇÃO: Estrutura flex para conter conteúdo sem expandir página */
-  display: flex;
-  flex-direction: column;
-  max-height: 520px;
-  overflow: hidden;
 }
 
 .card-header {
@@ -463,8 +456,6 @@ body {
   margin-bottom: var(--space-6); /* AUMENTADO: 24px */
   padding-bottom: var(--space-5); /* AUMENTADO: 16px → 20px */
   border-bottom: 1px solid var(--color-gray-100);
-  /* CORREÇÃO: Garante que header não seja comprimido */
-  flex-shrink: 0;
 }
 
 .card-title {
@@ -589,10 +580,9 @@ body {
 }
 
 /* ——— CATEGORY TREE (DASHBOARD) ———————————————————————————————————————————— */
-/* CORREÇÃO: Container de scroll isolado */
+/* CORREÇÃO: Scroll apenas no container específico sem afetar o layout do card */
 #categoriesSummary {
-  flex: 1;
-  min-height: 0; /* ESSENCIAL: Permite scroll funcionar em flex container */
+  max-height: 380px;
   overflow-y: auto;
   overflow-x: hidden;
   padding-right: var(--space-2);
@@ -622,7 +612,6 @@ body {
   display: flex;
   flex-direction: column;
   gap: var(--space-3); /* AUMENTADO: 8px → 12px */
-  max-height: none; /* Remove limite, deixa scroll no container pai */
 }
 
 .cat-tree-type {
@@ -695,7 +684,6 @@ details[open] > summary .cat-tree-chevron {
   color: var(--color-gray-800);
 }
 
-/* CORREÇÃO: Body com scroll próprio quando expandido */
 .cat-tree-body {
   padding: var(--space-3); /* 12px */
   background: var(--color-gray-50);
@@ -703,23 +691,6 @@ details[open] > summary .cat-tree-chevron {
   flex-direction: column;
   gap: var(--space-2); /* 8px */
   border-top: 1px solid var(--color-gray-100);
-  max-height: 180px; /* Limita altura quando expandido */
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-/* Scrollbar para o body expandido */
-.cat-tree-body::-webkit-scrollbar {
-  width: 5px;
-}
-
-.cat-tree-body::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.cat-tree-body::-webkit-scrollbar-thumb {
-  background: var(--color-gray-300);
-  border-radius: 3px;
 }
 
 .category-item {
@@ -731,7 +702,6 @@ details[open] > summary .cat-tree-chevron {
   border-radius: 10px; /* AUMENTADO: 8px → 10px */
   transition: background 0.2s;
   border: 1px solid transparent;
-  flex-shrink: 0;
 }
 
 .category-item:hover {
