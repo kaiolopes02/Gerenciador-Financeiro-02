@@ -689,6 +689,40 @@ details[open] > summary .cat-tree-chevron { transform: rotate(90deg); }
   color: var(--color-gray-800);
 }
 
+/* SCROLL RESUMO POR CATEGORIA */
+#categoriesSummary {
+  max-height: 380px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: var(--space-2);
+  scroll-behavior: smooth;
+}
+
+/* Estilização da scrollbar para consistência visual */
+#categoriesSummary::-webkit-scrollbar {
+  width: 6px;
+}
+
+#categoriesSummary::-webkit-scrollbar-track {
+  background: var(--color-gray-100);
+  border-radius: 3px;
+}
+
+#categoriesSummary::-webkit-scrollbar-thumb {
+  background: var(--color-gray-300);
+  border-radius: 3px;
+}
+
+#categoriesSummary::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gray-400);
+}
+
+/* Garantir que o cat-tree respeite o container */
+#categoriesSummary .cat-tree {
+  max-height: none;
+}
+
+
 .category-count { 
   font-size: var(--text-xs); /* 12px */
   color: var(--color-gray-400); 
