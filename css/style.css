@@ -690,7 +690,7 @@ details[open] > summary .cat-tree-chevron { transform: rotate(90deg); }
 }
 
 /* SCROLL RESUMO POR CATEGORIA - CORRIGIDO */
-#categoriesSummary {
+.categoriesSummary {
   max-height: 380px;
   overflow-y: auto;
   overflow-x: hidden;
@@ -703,41 +703,59 @@ details[open] > summary .cat-tree-chevron { transform: rotate(90deg); }
 }
 
 /* Estilização da scrollbar para consistência visual */
-#categoriesSummary::-webkit-scrollbar {
+.categoriesSummary::-webkit-scrollbar {
   width: 6px;
 }
 
-#categoriesSummary::-webkit-scrollbar-track {
+.categoriesSummary::-webkit-scrollbar-track {
   background: var(--color-gray-100);
   border-radius: 3px;
 }
 
-#categoriesSummary::-webkit-scrollbar-thumb {
+.categoriesSummary::-webkit-scrollbar-thumb {
   background: var(--color-gray-300);
   border-radius: 3px;
 }
 
-#categoriesSummary::-webkit-scrollbar-thumb:hover {
+.categoriesSummary::-webkit-scrollbar-thumb:hover {
   background: var(--color-gray-400);
 }
 
 /* CORREÇÃO: O cat-tree deve respeitar o scroll do container pai */
-#categoriesSummary .cat-tree {
+.categoriesSummary .cat-tree {
   max-height: none;
   /* NOVO: Garantir que não haja overflow interno que quebre o layout */
   overflow: visible;
 }
 
 /* NOVO: Garantir que o card não expanda com o conteúdo */
-#categoriesSummary .card {
+.categoriesSummary .card {
   overflow: hidden;
 }
 
 /* NOVO: Se o cat-tree-type estiver expandido, ainda respeita o container */
-#categoriesSummary .cat-tree-type[open] .cat-tree-body {
+.categoriesSummary .cat-tree-type[open] .cat-tree-body {
   /* O conteúdo expandido deve ser scrollável se necessário */
   max-height: 200px;
   overflow-y: auto;
+}
+/* NOVO: Prevenir expansão do dashboard-grid */
+.dashboard-grid {
+  align-items: start; /* Alinha os cards no topo */
+}
+
+/* NOVO: Garantir que o card de categorias não expanda */
+.categoriesSummary {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.categoriesSummary .card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 
