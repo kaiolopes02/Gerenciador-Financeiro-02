@@ -1340,49 +1340,56 @@ details[open] > summary .tree-chevron { transform: rotate(90deg); }
   }
 }
 
-/* ===== SCROLL RESUMO POR CATEGORIA - CORREÇÃO ===== */
+/* ===== SCROLL RESUMO POR CATEGORIA ===== */
 
-/* Card do Resumo por Categoria */
+/* Isola o card para conter o scroll */
 .card:has(#categoriesSummary) {
   display: flex;
   flex-direction: column;
-  height: auto; /* Altura fixa total do card */
-  max-height: auto;
+  max-height: 460px;
   overflow: hidden;
+  position: relative;
 }
 
-/* Container do conteúdo com scroll */
+/* Container do conteúdo - única área que scrolla */
 #categoriesSummary {
   flex: 1;
-  min-height: 0; /* Essencial para flex funcionar */
+  min-height: 0;
+  max-height: 360px;
   overflow-y: auto;
   overflow-x: hidden;
-  padding-right: var(--space-2);
-  padding-bottom: var(--space-2);
+  padding: 0 var(--space-4) var(--space-4) var(--space-4);
+  margin: 0 calc(var(--space-2) * -1) 0 0; /* Compensa scrollbar */
   scrollbar-width: thin;
   scrollbar-color: var(--color-gray-300) transparent;
 }
 
-/* Esconde scrollbar quando não necessário mas mantém funcionalidade */
-#categoriesSummary:empty {
-  overflow-y: hidden;
+/* Itens internos não podem expandir */
+#categoriesSummary .category-item,
+#categoriesSummary .empty {
+  flex-shrink: 0;
 }
 
-/* Estilização Webkit */
+/* Scrollbar estilizada */
 #categoriesSummary::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
 }
 
 #categoriesSummary::-webkit-scrollbar-track {
   background: transparent;
-  margin: 4px 0;
+  margin: var(--space-2) 0;
 }
 
 #categoriesSummary::-webkit-scrollbar-thumb {
   background: var(--color-gray-300);
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 #categoriesSummary::-webkit-scrollbar-thumb:hover {
   background: var(--color-gray-400);
+}
+
+/* Garante que o último item não fique colado no fundo */
+#categoriesSummary > *:last-child {
+  margin-bottom: var(--space-2);
 }
