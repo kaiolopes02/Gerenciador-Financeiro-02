@@ -38,11 +38,11 @@
           <div class="sidebar__title">Filtrar por Tipo</div>
           <div class="sidebar__menu">
             <button class="sidebar__item" onclick="filterByType('income')" id="filterIncome">
-              <span class="sidebar__icon" style="color: var(--color-income)">↑</span>
+              <span class="sidebar__icon" style="color: var(--color-income)">⬆</span>
               <span>Entradas</span>
             </button>
             <button class="sidebar__item" onclick="filterByType('expense')" id="filterExpense">
-              <span class="sidebar__icon" style="color: var(--color-expense)">↓</span>
+              <span class="sidebar__icon" style="color: var(--color-expense)">⬇</span>
               <span>Saídas</span>
             </button>
             <button class="sidebar__item" onclick="filterByType('reserve')" id="filterReserve">
@@ -115,7 +115,7 @@
           </div>
 
           <div class="dashboard-grid">
-            <div class="card" style="grid-column: 1 / -1;">
+            <div class="card">
               <div class="card-header">
                 <h3 class="card-title">📊 Distribuição Financeira</h3>
               </div>
@@ -130,6 +130,18 @@
                   </div>
                 </div>
                 <div class="chart-legend" id="chartLegend"></div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">📋 Resumo por Categoria</h3>
+              </div>
+              <div id="categoriesSummary">
+                <div class="empty">
+                  <div class="empty-icon">📊</div>
+                  <p>Sem dados para exibir</p>
+                </div>
               </div>
             </div>
           </div>
