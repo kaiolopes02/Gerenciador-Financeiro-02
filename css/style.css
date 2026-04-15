@@ -1340,34 +1340,49 @@ details[open] > summary .tree-chevron { transform: rotate(90deg); }
   }
 }
 
-/* ===== SCROLL RESUMO POR CATEGORIA ===== */
+/* ===== SCROLL RESUMO POR CATEGORIA - CORREÇÃO ===== */
+
+/* Card do Resumo por Categoria */
 .card:has(#categoriesSummary) {
   display: flex;
   flex-direction: column;
-  max-height: 480px;
+  height: 420px; /* Altura fixa total do card */
+  max-height: 420px;
   overflow: hidden;
 }
 
+/* Container do conteúdo com scroll */
 #categoriesSummary {
   flex: 1;
-  min-height: 0;
-  max-height: 360px;
+  min-height: 0; /* Essencial para flex funcionar */
   overflow-y: auto;
   overflow-x: hidden;
   padding-right: var(--space-2);
+  padding-bottom: var(--space-2);
   scrollbar-width: thin;
   scrollbar-color: var(--color-gray-300) transparent;
 }
 
+/* Esconde scrollbar quando não necessário mas mantém funcionalidade */
+#categoriesSummary:empty {
+  overflow-y: hidden;
+}
+
+/* Estilização Webkit */
 #categoriesSummary::-webkit-scrollbar {
   width: 6px;
 }
 
 #categoriesSummary::-webkit-scrollbar-track {
   background: transparent;
+  margin: 4px 0;
 }
 
 #categoriesSummary::-webkit-scrollbar-thumb {
   background: var(--color-gray-300);
   border-radius: 3px;
+}
+
+#categoriesSummary::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gray-400);
 }
