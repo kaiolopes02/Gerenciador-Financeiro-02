@@ -8,21 +8,23 @@ function calculateTotals() {
   const current = getMonthTransactions();
   const income = current.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
   const expense = current.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+  const expenseForBalance = current.filter(t => t.type === 'expense' && !t.goalId).reduce((sum, t) => sum + t.amount, 0);
   const reserveDeducted = current
     .filter(t => t.type === 'reserve' && t.deductFromBalance !== false)
     .reduce((sum, t) => sum + t.amount, 0);
   const reserveTotal = current.filter(t => t.type === 'reserve').reduce((sum, t) => sum + t.amount, 0);
-  return { income, expense, reserve: reserveTotal, balance: income - expense - reserveDeducted };
+  return { income, expense, reserve: reserveTotal, balance: income - expenseForBalance - reserveDeducted };
 }
 
 function calculateTotalsForMonth(monthStr) {
   const monthData = state.transactions.filter(t => getMonthYear(t.date) === monthStr);
   const income = monthData.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
   const expense = monthData.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+  const expenseForBalance = monthData.filter(t => t.type === 'expense' && !t.goalId).reduce((sum, t) => sum + t.amount, 0);
   const reserveDeducted = monthData
     .filter(t => t.type === 'reserve' && t.deductFromBalance !== false)
     .reduce((sum, t) => sum + t.amount, 0);
-  return { income, expense, balance: income - expense - reserveDeducted };
+  return { income, expense, balance: income - expenseForBalance - reserveDeducted };
 }
 
 function getPreviousMonth(monthStr) {
@@ -61,6 +63,7 @@ function renderChart() {
     const catData = CONFIG.categories[t.type]?.find(c => c.id === t.category);
     if (!catData) return;
     if (t.type === 'reserve' && t.deductFromBalance === false) return;
+    if (t.type === 'expense' && t.goalId) return;
     const key = `${t.type}-${t.category}`;
     if (!categoriesData[key]) {
       categoriesData[key] = { name: catData.name, icon: catData.icon, color: catData.color, type: t.type, total: 0 };
@@ -259,6 +262,8 @@ function createRecentHistoryHTML(t) {
   const sign  = t.type === 'income' ? '+' : '-';
   const catName = catData ? catData.name : t.category;
   const reserveNote = t.type === 'reserve' && t.deductFromBalance === false ? ' (não deduzido)' : '';
+  const goalData = t.goalId ? state.goals.find(g => g.id === t.goalId) : null;
+  const goalNote = goalData ? ` · 🎯 ${escapeHTML(goalData.name)}` : '';
 
   return `
     <div class="history-item">
@@ -266,7 +271,7 @@ function createRecentHistoryHTML(t) {
         <div class="history-icon" style="background:${bg};">${icon}</div>
         <div class="history-details">
           <h4>${escapeHTML(t.description || catName)}</h4>
-          <p>${escapeHTML(formatDate(t.date))} • ${escapeHTML(catName)}${reserveNote}</p>
+          <p>${escapeHTML(formatDate(t.date))} • ${escapeHTML(catName)}${reserveNote}${goalNote}</p>
         </div>
       </div>
       <span class="history-value" style="color:${color}">${sign} ${formatCurrency(t.amount)}</span>
@@ -353,12 +358,14 @@ function renderFullHistory() {
 
       txs.forEach(t => {
         const reserveNote = t.type === 'reserve' && t.deductFromBalance === false ? ' · não deduzido' : '';
+        const goalData = t.goalId ? state.goals.find(g => g.id === t.goalId) : null;
+        const goalNote = goalData ? ` · 🎯 ${escapeHTML(goalData.name)}` : '';
         html += `
           <div class="tree-leaf">
             <div class="tree-leaf__dot"></div>
             <div class="tree-leaf__info">
               <span class="tree-leaf__desc">${escapeHTML(t.description || catName)}</span>
-              <span class="tree-leaf__date">${escapeHTML(formatDate(t.date))}${reserveNote}</span>
+              <span class="tree-leaf__date">${escapeHTML(formatDate(t.date))}${reserveNote}${goalNote}</span>
             </div>
             <div class="tree-leaf__right">
               <span class="tree-leaf__value" style="color:${tc.colorVar};">${tc.sign} ${formatCurrency(t.amount)}</span>
@@ -385,4 +392,64 @@ function renderFullHistory() {
   container.querySelectorAll('.tree-delete-btn').forEach(btn => {
     btn.addEventListener('click', () => deleteTransaction(btn.dataset.id));
   });
+}
+
+function renderGoals() {
+  const container = document.getElementById('goalsList');
+  if (!container) return;
+
+  if (!state.goals || state.goals.length === 0) {
+    container.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">🎯</div>
+        <p>Nenhum objetivo cadastrado</p>
+        <button class="btn btn-primary btn-sm" onclick="openGoalModal()" style="margin-top:1rem;">Criar objetivo</button>
+      </div>`;
+    return;
+  }
+
+  const sorted = [...state.goals].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+
+  container.innerHTML = `<div class="goals-grid">${sorted.map(g => {
+    const percent = g.targetAmount > 0 ? Math.min(100, (g.currentAmount / g.targetAmount) * 100) : 0;
+    const remaining = Math.max(0, g.targetAmount - g.currentAmount);
+    const isCompleted = g.currentAmount >= g.targetAmount;
+    const statusText = isCompleted ? 'Concluído' : 'Em andamento';
+    const statusColor = isCompleted ? 'var(--color-income)' : 'var(--color-primary)';
+
+    return `
+      <div class="goal-card ${isCompleted ? 'completed' : ''}">
+        <div class="goal-header">
+          <div class="goal-icon">🎯</div>
+          <div class="goal-info">
+            <h4 class="goal-name">${escapeHTML(g.name)}</h4>
+            <span class="goal-status" style="color:${statusColor};">${statusText}</span>
+          </div>
+          <div class="goal-actions">
+            <button class="btn btn-icon" onclick="editGoal('${escapeHTML(g.id)}')" title="Editar" style="background:#F3F4F6;">✏️</button>
+            <button class="btn btn-danger btn-icon" onclick="deleteGoal('${escapeHTML(g.id)}')" title="Excluir">🗑️</button>
+          </div>
+        </div>
+        <div class="goal-progress-wrapper">
+          <div class="goal-progress-bar">
+            <div class="goal-progress-fill" style="width:${percent}%; background:${statusColor};"></div>
+          </div>
+          <div class="goal-progress-text">${percent.toFixed(1)}%</div>
+        </div>
+        <div class="goal-values">
+          <div class="goal-value-item">
+            <span class="goal-value-label">Guardado</span>
+            <span class="goal-value-amount" style="color:var(--color-income);">${formatCurrency(g.currentAmount)}</span>
+          </div>
+          <div class="goal-value-item">
+            <span class="goal-value-label">Restante</span>
+            <span class="goal-value-amount" style="color:var(--color-expense);">${formatCurrency(remaining)}</span>
+          </div>
+          <div class="goal-value-item">
+            <span class="goal-value-label">Meta</span>
+            <span class="goal-value-amount">${formatCurrency(g.targetAmount)}</span>
+          </div>
+        </div>
+      </div>`;
+  }).join('')}</div>`;
 }

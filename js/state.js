@@ -1,5 +1,6 @@
 let state = {
   transactions: [],
+  goals: [],
   currentPage: 'dashboard',
   currentFilter: null,
   editingId: null,
@@ -21,10 +22,20 @@ const isValidTransaction = (t) => {
   return true;
 };
 
+const isValidGoal = (g) => {
+  if (!g || typeof g !== 'object') return false;
+  if (typeof g.id !== 'string' || !g.id) return false;
+  if (typeof g.name !== 'string' || !g.name) return false;
+  if (typeof g.targetAmount !== 'number' || isNaN(g.targetAmount) || g.targetAmount <= 0 || g.targetAmount > 999999999) return false;
+  if (typeof g.currentAmount !== 'number' || isNaN(g.currentAmount) || g.currentAmount < 0 || g.currentAmount > 999999999) return false;
+  return true;
+};
+
 const Storage = {
   save: () => {
     try {
       localStorage.setItem(CONFIG.storageKey, JSON.stringify(state.transactions));
+      localStorage.setItem(CONFIG.storageKey + '_goals', JSON.stringify(state.goals));
     } catch (e) {
       console.warn('Erro ao salvar no localStorage:', e);
     }
@@ -43,6 +54,7 @@ const Storage = {
             date:             String(t.date),
             description:      typeof t.description === 'string' ? t.description.substring(0, 200) : '',
             deductFromBalance: t.deductFromBalance !== false,
+            goalId:           typeof t.goalId === 'string' ? t.goalId : undefined,
             createdAt:        typeof t.createdAt === 'string' ? t.createdAt : '',
             updatedAt:        typeof t.updatedAt === 'string' ? t.updatedAt : ''
           }));
@@ -52,9 +64,29 @@ const Storage = {
       } else {
         state.transactions = [];
       }
+
+      const goalsData = localStorage.getItem(CONFIG.storageKey + '_goals');
+      if (goalsData) {
+        const parsedGoals = JSON.parse(goalsData);
+        if (Array.isArray(parsedGoals)) {
+          state.goals = parsedGoals.filter(isValidGoal).map(g => ({
+            id: String(g.id),
+            name: String(g.name).substring(0, 100),
+            targetAmount: Number(g.targetAmount),
+            currentAmount: Math.max(0, Number(g.currentAmount)),
+            createdAt: typeof g.createdAt === 'string' ? g.createdAt : '',
+            updatedAt: typeof g.updatedAt === 'string' ? g.updatedAt : ''
+          }));
+        } else {
+          state.goals = [];
+        }
+      } else {
+        state.goals = [];
+      }
     } catch (e) {
       console.warn('Erro ao carregar do localStorage:', e);
       state.transactions = [];
+      state.goals = [];
     }
   }
 };

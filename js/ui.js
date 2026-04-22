@@ -36,20 +36,24 @@ function showPage(page, keepFilter = false) {
     item.classList.remove('active');
     const text = item.textContent.toLowerCase();
     if ((page === 'dashboard' && text.includes('dashboard')) ||
-        (page === 'history' && text.includes('histórico'))) {
+        (page === 'history' && text.includes('histórico')) ||
+        (page === 'goals' && text.includes('objetivos'))) {
       item.classList.add('active');
     }
   });
 
   document.getElementById('dashboardPage').classList.toggle('hidden', page !== 'dashboard');
   document.getElementById('historyPage').classList.toggle('hidden', page !== 'history');
-  document.getElementById('pageTitle').textContent = page === 'dashboard' ? 'Dashboard' : 'Histórico';
+  document.getElementById('goalsPage').classList.toggle('hidden', page !== 'goals');
+  document.getElementById('pageTitle').textContent = page === 'dashboard' ? 'Dashboard' : page === 'history' ? 'Histórico' : 'Objetivos';
   document.getElementById('sidebar').classList.remove('open');
 
   if (page === 'history') {
     updateHistorySubtitle();
     renderFullHistory();
     updateFilterIndicator();
+  } else if (page === 'goals') {
+    renderGoals();
   } else {
     updateAll();
   }
@@ -184,6 +188,9 @@ function openModal(editId = null) {
         updateCategories();
         setTimeout(() => {
           document.getElementById('category').value = transaction.category;
+          if ((transaction.type === 'expense' || transaction.type === 'reserve') && transaction.goalId) {
+            document.getElementById('goalSelect').value = transaction.goalId;
+          }
         }, 0);
       }
 
@@ -226,4 +233,104 @@ function updateCategories() {
 
   const reserveOptions = document.getElementById('reserveOptions');
   if (reserveOptions) reserveOptions.style.display = type === 'reserve' ? 'flex' : 'none';
+
+  const goalGroup = document.getElementById('goalSelectGroup');
+  const goalSelect = document.getElementById('goalSelect');
+  if (goalGroup && goalSelect) {
+    if (type === 'expense' || type === 'reserve') {
+      goalGroup.style.display = 'block';
+      goalSelect.innerHTML = '<option value="">Nenhum</option>' +
+        state.goals.map(g => `<option value="${escapeHTML(g.id)}">${escapeHTML(g.name)}</option>`).join('');
+    } else {
+      goalGroup.style.display = 'none';
+      goalSelect.value = '';
+    }
+  }
+}
+
+function openGoalModal(editId = null) {
+  const overlay = document.getElementById('goalModalOverlay');
+  const title = document.getElementById('goalModalTitle');
+  overlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+
+  if (editId) {
+    const goal = state.goals.find(g => g.id === editId);
+    if (goal) {
+      title.textContent = 'Editar Objetivo';
+      document.getElementById('goalEditId').value = goal.id;
+      document.getElementById('goalName').value = goal.name;
+      document.getElementById('goalTarget').value = goal.targetAmount;
+      document.getElementById('goalCurrent').value = goal.currentAmount;
+    }
+  } else {
+    title.textContent = 'Novo Objetivo';
+    document.getElementById('goalForm').reset();
+    document.getElementById('goalEditId').value = '';
+    document.getElementById('goalCurrent').value = '0';
+  }
+}
+
+function closeGoalModal() {
+  document.getElementById('goalModalOverlay').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function saveGoal() {
+  const editId = document.getElementById('goalEditId').value;
+  const name = document.getElementById('goalName').value.trim();
+  const target = parseFloat(document.getElementById('goalTarget').value);
+  const current = parseFloat(document.getElementById('goalCurrent').value) || 0;
+
+  if (!name || isNaN(target) || target <= 0 || target > 999999999) {
+    Toast.show('Preencha todos os campos obrigatórios', 'error');
+    return;
+  }
+  if (current < 0 || current > 999999999) {
+    Toast.show('Valor atual inválido', 'error');
+    return;
+  }
+
+  const goalData = {
+    name: name.replace(/[\x00-\x1F\x7F]/g, '').substring(0, 100),
+    targetAmount: parseFloat(target.toFixed(2)),
+    currentAmount: Math.max(0, parseFloat(current.toFixed(2))),
+    updatedAt: new Date().toISOString()
+  };
+
+  if (editId) {
+    const index = state.goals.findIndex(g => g.id === editId);
+    if (index !== -1) {
+      state.goals[index] = { ...state.goals[index], ...goalData };
+      Toast.show('Objetivo atualizado com sucesso!');
+    }
+  } else {
+    goalData.id = generateId();
+    goalData.createdAt = new Date().toISOString();
+    state.goals.push(goalData);
+    Toast.show('Objetivo criado com sucesso!');
+  }
+
+  Storage.save();
+  closeGoalModal();
+  updateAll();
+}
+
+function editGoal(id) {
+  openGoalModal(id);
+}
+
+function deleteGoal(id) {
+  if (!confirm('Tem certeza que deseja excluir este objetivo?')) return;
+  const linkedTxs = state.transactions.filter(t => t.goalId === id);
+  if (linkedTxs.length > 0) {
+    if (!confirm('Este objetivo possui transações vinculadas. Ao excluí-lo, elas ficarão desvinculadas. Deseja continuar?')) return;
+    state.transactions.forEach(t => {
+      if (t.goalId === id) delete t.goalId;
+    });
+  }
+  state.goals = state.goals.filter(g => g.id !== id);
+  Storage.save();
+  updateAll();
+  Toast.show('Objetivo excluído');
 }
