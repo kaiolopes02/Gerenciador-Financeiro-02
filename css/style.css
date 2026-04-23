@@ -426,4 +426,5 @@ details[open] > summary .tree-chevron { transform: rotate(90deg); }
   .tree-leaf__right { flex: 0 0 100%; justify-content: space-between; }
   .goals-grid { grid-template-columns: 1fr; }
   .goal-values { grid-template-columns: 1fr; gap: 0.5rem; }
+  .header .btn-primary span:last-child { display: none; }
 }
