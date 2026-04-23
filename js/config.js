@@ -11,7 +11,8 @@ const CONFIG = {
       { id: 'fixed',     name: 'Gastos Fixos',           color: '#DC2626', bg: '#FEE2E2', icon: '🏠' },
       { id: 'mandatory', name: 'Despesas Obrigatórias',   color: '#EA580C', bg: '#FEE2E2', icon: '📋' },
       { id: 'variable',  name: 'Gastos Variáveis',        color: '#F59E0B', bg: '#FEF3C7', icon: '🛒' },
-      { id: 'luxury',    name: 'Lazer/Extras',            color: '#F97316', bg: '#FFEDD5', icon: '🎮' }
+      { id: 'luxury',    name: 'Lazer/Extras',            color: '#F97316', bg: '#FFEDD5', icon: '🎮' },
+      { id: 'debt',      name: 'Dívidas/Parcelas',        color: '#991B1B', bg: '#FEE2E2', icon: '💳' }
     ],
     reserve: [
       { id: 'emergency',  name: 'Reserva Emergência',  color: '#7C3AED', bg: '#EDE9FE', icon: '🛡️' },

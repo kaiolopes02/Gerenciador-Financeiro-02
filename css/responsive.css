@@ -22,4 +22,26 @@
   .goals-grid { grid-template-columns: 1fr; }
   .goal-values { grid-template-columns: 1fr; gap: 0.5rem; }
   .header .btn-primary span:last-child { display: none; }
+
+  /* Prevent iOS zoom on inputs */
+  .form-input, .form-select, input[type="number"], input[type="text"], input[type="date"], select {
+    font-size: 16px;
+  }
+
+  /* Modal fits small screens without overflow */
+  .modal {
+    max-width: 100%;
+    margin: 0 0.5rem;
+  }
+  .modal-header, .modal-body, .modal-footer {
+    padding: 1rem;
+  }
+
+  /* Avoid text overflow in goal/debt cards */
+  .goal-card {
+    min-width: 0;
+  }
+  .goal-name, .goal-value-amount {
+    word-break: break-word;
+  }
 }

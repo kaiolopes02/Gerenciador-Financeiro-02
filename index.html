@@ -40,6 +40,10 @@
               <span class="sidebar__icon">🎯</span>
               <span>Objetivos</span>
             </button>
+            <button class="sidebar__item" onclick="showPage('debts')">
+              <span class="sidebar__icon">💳</span>
+              <span>Dívidas</span>
+            </button>
           </div>
         </div>
         <div class="sidebar__section">
@@ -211,6 +215,25 @@
             </div>
           </div>
         </div>
+
+        <div id="debtsPage" class="hidden">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <h2 class="page-title">Controle de Dívidas</h2>
+              <p class="page-subtitle" style="margin-top: 0.25rem;">Acompanhe empréstimos e parcelamentos</p>
+            </div>
+            <button class="btn btn-primary" onclick="openDebtModal()">
+              <span>+</span>
+              <span>Nova Dívida</span>
+            </button>
+          </div>
+          <div id="debtsList">
+            <div class="empty">
+              <div class="empty-icon">💳</div>
+              <p>Nenhuma dívida cadastrada</p>
+            </div>
+          </div>
+        </div>
       </div>
     </main>
   </div>
@@ -279,6 +302,13 @@
             </select>
           </div>
 
+          <div class="form-group" id="debtSelectGroup" style="display: none;">
+            <label class="form-label">Vincular a Dívida <small style="color: var(--color-gray-400); font-weight: normal;">(opcional)</small></label>
+            <select class="form-select" id="debtSelect">
+              <option value="">Nenhuma</option>
+            </select>
+          </div>
+
           <div class="checkbox-wrapper" id="reserveOptions" style="display: none;">
             <input type="checkbox" id="deductFromBalance" checked>
             <label for="deductFromBalance">Deduzir do saldo disponível</label>
@@ -318,6 +348,56 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" onclick="closeGoalModal()">Cancelar</button>
         <button type="button" class="btn btn-primary" onclick="saveGoal()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="debtModalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title" id="debtModalTitle">Nova Dívida</h3>
+        <button class="modal-close" onclick="closeDebtModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <form id="debtForm" onsubmit="return false;">
+          <input type="hidden" id="debtEditId">
+          <div class="form-group">
+            <label class="form-label">Nome da Dívida *</label>
+            <input type="text" class="form-input" id="debtName" required maxlength="100" placeholder="Ex: Empréstimo Tio João">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Credor <small style="color: var(--color-gray-400); font-weight: normal;">(opcional)</small></label>
+            <input type="text" class="form-input" id="debtCreditor" maxlength="100" placeholder="Ex: Tio João, Banco, Loja XYZ">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Valor Total (R$) *</label>
+              <input type="number" class="form-input" id="debtTotal" step="0.01" min="0.01" required placeholder="0,00">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Valor Pago (R$)</label>
+              <input type="number" class="form-input" id="debtPaid" step="0.01" min="0" placeholder="0,00">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Parcelas <small style="color: var(--color-gray-400); font-weight: normal;">(0 = não parcelado)</small></label>
+              <input type="number" class="form-input" id="debtInstallments" step="1" min="0" placeholder="0" onchange="calcInstallmentValue()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Valor da Parcela (R$)</label>
+              <input type="number" class="form-input" id="debtInstallmentValue" step="0.01" min="0" placeholder="0,00" onchange="calcInstallmentCount()">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Dia de Vencimento <small style="color: var(--color-gray-400); font-weight: normal;">(opcional)</small></label>
+            <input type="number" class="form-input" id="debtDueDay" step="1" min="1" max="31" placeholder="Ex: 15">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeDebtModal()">Cancelar</button>
+        <button type="button" class="btn btn-primary" onclick="saveDebt()">Salvar</button>
       </div>
     </div>
   </div>

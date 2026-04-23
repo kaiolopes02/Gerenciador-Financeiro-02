@@ -37,7 +37,8 @@ function showPage(page, keepFilter = false) {
     const text = item.textContent.toLowerCase();
     if ((page === 'dashboard' && text.includes('dashboard')) ||
         (page === 'history' && text.includes('histórico')) ||
-        (page === 'goals' && text.includes('objetivos'))) {
+        (page === 'goals' && text.includes('objetivos')) ||
+        (page === 'debts' && text.includes('dívidas'))) {
       item.classList.add('active');
     }
   });
@@ -45,7 +46,8 @@ function showPage(page, keepFilter = false) {
   document.getElementById('dashboardPage').classList.toggle('hidden', page !== 'dashboard');
   document.getElementById('historyPage').classList.toggle('hidden', page !== 'history');
   document.getElementById('goalsPage').classList.toggle('hidden', page !== 'goals');
-  document.getElementById('pageTitle').textContent = page === 'dashboard' ? 'Dashboard' : page === 'history' ? 'Histórico' : 'Objetivos';
+  document.getElementById('debtsPage').classList.toggle('hidden', page !== 'debts');
+  document.getElementById('pageTitle').textContent = page === 'dashboard' ? 'Dashboard' : page === 'history' ? 'Histórico' : page === 'goals' ? 'Objetivos' : 'Dívidas';
   document.getElementById('sidebar').classList.remove('open');
 
   if (page === 'history') {
@@ -54,6 +56,8 @@ function showPage(page, keepFilter = false) {
     updateFilterIndicator();
   } else if (page === 'goals') {
     renderGoals();
+  } else if (page === 'debts') {
+    renderDebts();
   } else {
     updateAll();
   }
@@ -191,6 +195,9 @@ function openModal(editId = null) {
           if ((transaction.type === 'expense' || transaction.type === 'reserve') && transaction.goalId) {
             document.getElementById('goalSelect').value = transaction.goalId;
           }
+          if (transaction.type === 'expense' && transaction.debtId) {
+            document.getElementById('debtSelect').value = transaction.debtId;
+          }
         }, 0);
       }
 
@@ -244,6 +251,19 @@ function updateCategories() {
     } else {
       goalGroup.style.display = 'none';
       goalSelect.value = '';
+    }
+  }
+
+  const debtGroup = document.getElementById('debtSelectGroup');
+  const debtSelect = document.getElementById('debtSelect');
+  if (debtGroup && debtSelect) {
+    if (type === 'expense') {
+      debtGroup.style.display = 'block';
+      debtSelect.innerHTML = '<option value="">Nenhuma</option>' +
+        state.debts.filter(d => d.status === 'active').map(d => `<option value="${escapeHTML(d.id)}">${escapeHTML(d.name)}</option>`).join('');
+    } else {
+      debtGroup.style.display = 'none';
+      debtSelect.value = '';
     }
   }
 }
@@ -333,4 +353,124 @@ function deleteGoal(id) {
   Storage.save();
   updateAll();
   Toast.show('Objetivo excluído');
+}
+
+function openDebtModal(editId = null) {
+  const overlay = document.getElementById('debtModalOverlay');
+  const title = document.getElementById('debtModalTitle');
+  overlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+
+  if (editId) {
+    const debt = state.debts.find(d => d.id === editId);
+    if (debt) {
+      title.textContent = 'Editar Dívida';
+      document.getElementById('debtEditId').value = debt.id;
+      document.getElementById('debtName').value = debt.name;
+      document.getElementById('debtCreditor').value = debt.creditor || '';
+      document.getElementById('debtTotal').value = debt.totalAmount;
+      document.getElementById('debtPaid').value = debt.paidAmount;
+      document.getElementById('debtInstallments').value = debt.installmentCount;
+      document.getElementById('debtInstallmentValue').value = debt.installmentValue;
+      if (debt.dueDay) document.getElementById('debtDueDay').value = debt.dueDay;
+    }
+  } else {
+    title.textContent = 'Nova Dívida';
+    document.getElementById('debtForm').reset();
+    document.getElementById('debtEditId').value = '';
+    document.getElementById('debtPaid').value = '0';
+    document.getElementById('debtInstallments').value = '0';
+    document.getElementById('debtInstallmentValue').value = '0';
+  }
+}
+
+function closeDebtModal() {
+  document.getElementById('debtModalOverlay').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function calcInstallmentValue() {
+  const total = parseFloat(document.getElementById('debtTotal').value) || 0;
+  const count = parseInt(document.getElementById('debtInstallments').value) || 0;
+  const input = document.getElementById('debtInstallmentValue');
+  if (count > 0 && total > 0) {
+    input.value = (total / count).toFixed(2);
+  }
+}
+
+function calcInstallmentCount() {
+  const total = parseFloat(document.getElementById('debtTotal').value) || 0;
+  const installmentValue = parseFloat(document.getElementById('debtInstallmentValue').value) || 0;
+  const input = document.getElementById('debtInstallments');
+  if (installmentValue > 0 && total > 0) {
+    input.value = Math.ceil(total / installmentValue);
+  }
+}
+
+function saveDebt() {
+  const editId = document.getElementById('debtEditId').value;
+  const name = document.getElementById('debtName').value.trim();
+  const creditor = document.getElementById('debtCreditor').value.trim();
+  const total = parseFloat(document.getElementById('debtTotal').value);
+  const paid = parseFloat(document.getElementById('debtPaid').value) || 0;
+  const installments = parseInt(document.getElementById('debtInstallments').value) || 0;
+  const installmentValue = parseFloat(document.getElementById('debtInstallmentValue').value) || 0;
+  const dueDay = parseInt(document.getElementById('debtDueDay').value) || null;
+
+  if (!name || isNaN(total) || total <= 0 || total > 999999999) {
+    Toast.show('Preencha todos os campos obrigatórios', 'error');
+    return;
+  }
+  if (paid < 0 || paid > 999999999) {
+    Toast.show('Valor pago inválido', 'error');
+    return;
+  }
+  if (installments < 0) {
+    Toast.show('Quantidade de parcelas inválida', 'error');
+    return;
+  }
+
+  const debtData = {
+    name: name.replace(/[\x00-\x1F\x7F]/g, '').substring(0, 100),
+    creditor: creditor.replace(/[\x00-\x1F\x7F]/g, '').substring(0, 100),
+    totalAmount: parseFloat(total.toFixed(2)),
+    paidAmount: Math.max(0, parseFloat(paid.toFixed(2))),
+    installmentCount: installments,
+    installmentValue: Math.max(0, parseFloat(installmentValue.toFixed(2))),
+    dueDay: dueDay,
+    status: paid >= total ? 'paid_off' : 'active',
+    updatedAt: new Date().toISOString()
+  };
+
+  if (editId) {
+    const index = state.debts.findIndex(d => d.id === editId);
+    if (index !== -1) {
+      state.debts[index] = { ...state.debts[index], ...debtData };
+      Toast.show('Dívida atualizada com sucesso!');
+    }
+  } else {
+    debtData.id = generateId();
+    debtData.createdAt = new Date().toISOString();
+    state.debts.push(debtData);
+    Toast.show('Dívida criada com sucesso!');
+  }
+
+  Storage.save();
+  closeDebtModal();
+  updateAll();
+}
+
+function editDebt(id) {
+  openDebtModal(id);
+}
+
+function deleteDebt(id) {
+  if (!confirm('Tem certeza que deseja excluir esta dívida?')) return;
+  state.transactions.forEach(t => {
+    if (t.debtId === id) delete t.debtId;
+  });
+  state.debts = state.debts.filter(d => d.id !== id);
+  Storage.save();
+  updateAll();
+  Toast.show('Dívida excluída');
 }

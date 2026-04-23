@@ -11,6 +11,9 @@ function saveTransaction() {
   const goalId      = (type === 'expense' || type === 'reserve')
     ? document.getElementById('goalSelect').value || null
     : null;
+  const debtId      = type === 'expense'
+    ? document.getElementById('debtSelect').value || null
+    : null;
 
   if (!type || !category || isNaN(amount) || amount <= 0 || amount > 999999999 || !date) {
     Toast.show('Preencha todos os campos obrigatórios', 'error');
@@ -33,6 +36,7 @@ function saveTransaction() {
     description: description || categoryData.name,
     deductFromBalance,
     goalId: goalId || undefined,
+    debtId: debtId || undefined,
     updatedAt: new Date().toISOString()
   };
 
@@ -53,6 +57,15 @@ function saveTransaction() {
         }
       }
 
+      if (oldTx.debtId && oldTx.type === 'expense') {
+        const oldDebt = state.debts.find(d => d.id === oldTx.debtId);
+        if (oldDebt) {
+          oldDebt.paidAmount = Math.max(0, oldDebt.paidAmount - oldTx.amount);
+          oldDebt.status = oldDebt.paidAmount >= oldDebt.totalAmount ? 'paid_off' : 'active';
+          oldDebt.updatedAt = new Date().toISOString();
+        }
+      }
+
       if (transactionData.goalId) {
         const newGoal = state.goals.find(g => g.id === transactionData.goalId);
         if (newGoal) {
@@ -62,6 +75,15 @@ function saveTransaction() {
             newGoal.currentAmount = newGoal.currentAmount + transactionData.amount;
           }
           newGoal.updatedAt = new Date().toISOString();
+        }
+      }
+
+      if (transactionData.debtId && transactionData.type === 'expense') {
+        const newDebt = state.debts.find(d => d.id === transactionData.debtId);
+        if (newDebt) {
+          newDebt.paidAmount = Math.min(newDebt.totalAmount, newDebt.paidAmount + transactionData.amount);
+          newDebt.status = newDebt.paidAmount >= newDebt.totalAmount ? 'paid_off' : 'active';
+          newDebt.updatedAt = new Date().toISOString();
         }
       }
 
@@ -78,6 +100,14 @@ function saveTransaction() {
           goal.currentAmount = goal.currentAmount + transactionData.amount;
         }
         goal.updatedAt = new Date().toISOString();
+      }
+    }
+    if (transactionData.debtId && transactionData.type === 'expense') {
+      const debt = state.debts.find(d => d.id === transactionData.debtId);
+      if (debt) {
+        debt.paidAmount = Math.min(debt.totalAmount, debt.paidAmount + transactionData.amount);
+        debt.status = debt.paidAmount >= debt.totalAmount ? 'paid_off' : 'active';
+        debt.updatedAt = new Date().toISOString();
       }
     }
     transactionData.id = generateId();
@@ -114,6 +144,14 @@ function deleteTransaction(id) {
       goal.updatedAt = new Date().toISOString();
     }
   }
+  if (tx && tx.debtId && tx.type === 'expense') {
+    const debt = state.debts.find(d => d.id === tx.debtId);
+    if (debt) {
+      debt.paidAmount = Math.max(0, debt.paidAmount - tx.amount);
+      debt.status = debt.paidAmount >= debt.totalAmount ? 'paid_off' : 'active';
+      debt.updatedAt = new Date().toISOString();
+    }
+  }
   state.transactions = state.transactions.filter(t => t.id !== id);
   Storage.save();
   updateAll();
@@ -137,6 +175,9 @@ function updateAll() {
   if (state.currentPage === 'goals') {
     renderGoals();
   }
+  if (state.currentPage === 'debts') {
+    renderDebts();
+  }
 }
 
 // ─────────────────────────────────────────────────
@@ -154,6 +195,7 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     closeModal();
     closeGoalModal();
+    closeDebtModal();
   }
 });
 

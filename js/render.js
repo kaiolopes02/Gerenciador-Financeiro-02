@@ -264,6 +264,8 @@ function createRecentHistoryHTML(t) {
   const reserveNote = t.type === 'reserve' && t.deductFromBalance === false ? ' (não deduzido)' : '';
   const goalData = t.goalId ? state.goals.find(g => g.id === t.goalId) : null;
   const goalNote = goalData ? ` · 🎯 ${escapeHTML(goalData.name)}` : '';
+  const debtData = t.debtId ? state.debts.find(d => d.id === t.debtId) : null;
+  const debtNote = debtData ? ` · 💳 ${escapeHTML(debtData.name)}` : '';
 
   return `
     <div class="history-item">
@@ -271,7 +273,7 @@ function createRecentHistoryHTML(t) {
         <div class="history-icon" style="background:${bg};">${icon}</div>
         <div class="history-details">
           <h4>${escapeHTML(t.description || catName)}</h4>
-          <p>${escapeHTML(formatDate(t.date))} • ${escapeHTML(catName)}${reserveNote}${goalNote}</p>
+          <p>${escapeHTML(formatDate(t.date))} • ${escapeHTML(catName)}${reserveNote}${goalNote}${debtNote}</p>
         </div>
       </div>
       <span class="history-value" style="color:${color}">${sign} ${formatCurrency(t.amount)}</span>
@@ -360,12 +362,14 @@ function renderFullHistory() {
         const reserveNote = t.type === 'reserve' && t.deductFromBalance === false ? ' · não deduzido' : '';
         const goalData = t.goalId ? state.goals.find(g => g.id === t.goalId) : null;
         const goalNote = goalData ? ` · 🎯 ${escapeHTML(goalData.name)}` : '';
+        const debtData = t.debtId ? state.debts.find(d => d.id === t.debtId) : null;
+        const debtNote = debtData ? ` · 💳 ${escapeHTML(debtData.name)}` : '';
         html += `
           <div class="tree-leaf">
             <div class="tree-leaf__dot"></div>
             <div class="tree-leaf__info">
               <span class="tree-leaf__desc">${escapeHTML(t.description || catName)}</span>
-              <span class="tree-leaf__date">${escapeHTML(formatDate(t.date))}${reserveNote}${goalNote}</span>
+              <span class="tree-leaf__date">${escapeHTML(formatDate(t.date))}${reserveNote}${goalNote}${debtNote}</span>
             </div>
             <div class="tree-leaf__right">
               <span class="tree-leaf__value" style="color:${tc.colorVar};">${tc.sign} ${formatCurrency(t.amount)}</span>
@@ -450,6 +454,74 @@ function renderGoals() {
             <span class="goal-value-amount">${formatCurrency(g.targetAmount)}</span>
           </div>
         </div>
+      </div>`;
+  }).join('')}</div>`;
+}
+
+function renderDebts() {
+  const container = document.getElementById('debtsList');
+  if (!container) return;
+
+  if (!state.debts || state.debts.length === 0) {
+    container.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">💳</div>
+        <p>Nenhuma dívida cadastrada</p>
+        <button class="btn btn-primary btn-sm" onclick="openDebtModal()" style="margin-top:1rem;">Criar dívida</button>
+      </div>`;
+    return;
+  }
+
+  const sorted = [...state.debts].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+
+  container.innerHTML = `<div class="goals-grid">${sorted.map(d => {
+    const percent = d.totalAmount > 0 ? Math.min(100, (d.paidAmount / d.totalAmount) * 100) : 0;
+    const remaining = Math.max(0, d.totalAmount - d.paidAmount);
+    const isPaidOff = d.status === 'paid_off';
+    const statusText = isPaidOff ? 'Quitado' : 'Em aberto';
+    const statusColor = isPaidOff ? 'var(--color-income)' : 'var(--color-expense)';
+    const nextInstallment = d.installmentCount > 0 && d.installmentValue > 0
+      ? Math.min(d.installmentCount, Math.floor(d.paidAmount / d.installmentValue) + 1)
+      : null;
+
+    return `
+      <div class="goal-card ${isPaidOff ? 'completed' : ''}">
+        <div class="goal-header">
+          <div class="goal-icon">💳</div>
+          <div class="goal-info">
+            <h4 class="goal-name">${escapeHTML(d.name)}</h4>
+            <span class="goal-status" style="color:${statusColor};">${statusText}${d.creditor ? ' · ' + escapeHTML(d.creditor) : ''}</span>
+          </div>
+          <div class="goal-actions">
+            <button class="btn btn-icon" onclick="editDebt('${escapeHTML(d.id)}')" title="Editar" style="background:#F3F4F6;">✏️</button>
+            <button class="btn btn-danger btn-icon" onclick="deleteDebt('${escapeHTML(d.id)}')" title="Excluir">🗑️</button>
+          </div>
+        </div>
+        <div class="goal-progress-wrapper">
+          <div class="goal-progress-bar">
+            <div class="goal-progress-fill" style="width:${percent}%; background:${statusColor};"></div>
+          </div>
+          <div class="goal-progress-text">${percent.toFixed(1)}%</div>
+        </div>
+        <div class="goal-values">
+          <div class="goal-value-item">
+            <span class="goal-value-label">Total</span>
+            <span class="goal-value-amount">${formatCurrency(d.totalAmount)}</span>
+          </div>
+          <div class="goal-value-item">
+            <span class="goal-value-label">Pago</span>
+            <span class="goal-value-amount" style="color:var(--color-income);">${formatCurrency(d.paidAmount)}</span>
+          </div>
+          <div class="goal-value-item">
+            <span class="goal-value-label">Restante</span>
+            <span class="goal-value-amount" style="color:var(--color-expense);">${formatCurrency(remaining)}</span>
+          </div>
+        </div>
+        ${d.installmentCount > 0 ? `
+        <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--color-gray-100);display:flex;justify-content:space-between;font-size:0.8125rem;">
+          <span style="color:var(--color-gray-500);">Parcela ${nextInstallment} de ${d.installmentCount}</span>
+          <span style="font-weight:600;">${formatCurrency(d.installmentValue)}/mês</span>
+        </div>` : ''}
       </div>`;
   }).join('')}</div>`;
 }
