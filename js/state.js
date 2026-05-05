@@ -63,7 +63,7 @@ const Storage = {
             id:               String(t.id),
             type:             t.type,
             category:         String(t.category),
-            amount:           Number(t.amount),
+            amount:           roundCurrency(Number(t.amount)),
             date:             String(t.date),
             description:      typeof t.description === 'string' ? t.description.substring(0, 200) : '',
             deductFromBalance: t.deductFromBalance !== false,
@@ -86,8 +86,8 @@ const Storage = {
           state.goals = parsedGoals.filter(isValidGoal).map(g => ({
             id: String(g.id),
             name: String(g.name).substring(0, 100),
-            targetAmount: Number(g.targetAmount),
-            currentAmount: Math.max(0, Number(g.currentAmount)),
+            targetAmount: roundCurrency(Number(g.targetAmount)),
+            currentAmount: Math.max(0, roundCurrency(Number(g.currentAmount))),
             createdAt: typeof g.createdAt === 'string' ? g.createdAt : '',
             updatedAt: typeof g.updatedAt === 'string' ? g.updatedAt : ''
           }));
@@ -106,10 +106,10 @@ const Storage = {
             id: String(d.id),
             name: String(d.name).substring(0, 100),
             creditor: typeof d.creditor === 'string' ? d.creditor.substring(0, 100) : '',
-            totalAmount: Number(d.totalAmount),
-            paidAmount: Math.max(0, Number(d.paidAmount)),
+            totalAmount: roundCurrency(Number(d.totalAmount)),
+            paidAmount: Math.max(0, roundCurrency(Number(d.paidAmount))),
             installmentCount: Math.max(0, Number(d.installmentCount)),
-            installmentValue: Math.max(0, Number(d.installmentValue)),
+            installmentValue: Math.max(0, roundCurrency(Number(d.installmentValue))),
             dueDay: typeof d.dueDay === 'number' ? d.dueDay : null,
             status: d.status === 'paid_off' ? 'paid_off' : 'active',
             createdAt: typeof d.createdAt === 'string' ? d.createdAt : '',

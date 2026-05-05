@@ -6,25 +6,25 @@ function getMonthTransactions(monthStr = null) {
 
 function calculateTotals() {
   const current = getMonthTransactions();
-  const income = current.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
-  const expense = current.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
-  const expenseForBalance = current.filter(t => t.type === 'expense' && !t.goalId).reduce((sum, t) => sum + t.amount, 0);
-  const reserveDeducted = current
+  const income = roundCurrency(current.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0));
+  const expense = roundCurrency(current.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0));
+  const expenseForBalance = roundCurrency(current.filter(t => t.type === 'expense' && !t.goalId).reduce((sum, t) => sum + t.amount, 0));
+  const reserveDeducted = roundCurrency(current
     .filter(t => t.type === 'reserve' && t.deductFromBalance !== false)
-    .reduce((sum, t) => sum + t.amount, 0);
-  const reserveTotal = current.filter(t => t.type === 'reserve').reduce((sum, t) => sum + t.amount, 0);
-  return { income, expense, reserve: reserveTotal, balance: income - expenseForBalance - reserveDeducted };
+    .reduce((sum, t) => sum + t.amount, 0));
+  const reserveTotal = roundCurrency(current.filter(t => t.type === 'reserve').reduce((sum, t) => sum + t.amount, 0));
+  return { income, expense, reserve: reserveTotal, balance: roundCurrency(income - expenseForBalance - reserveDeducted) };
 }
 
 function calculateTotalsForMonth(monthStr) {
   const monthData = state.transactions.filter(t => getMonthYear(t.date) === monthStr);
-  const income = monthData.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
-  const expense = monthData.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
-  const expenseForBalance = monthData.filter(t => t.type === 'expense' && !t.goalId).reduce((sum, t) => sum + t.amount, 0);
-  const reserveDeducted = monthData
+  const income = roundCurrency(monthData.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0));
+  const expense = roundCurrency(monthData.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0));
+  const expenseForBalance = roundCurrency(monthData.filter(t => t.type === 'expense' && !t.goalId).reduce((sum, t) => sum + t.amount, 0));
+  const reserveDeducted = roundCurrency(monthData
     .filter(t => t.type === 'reserve' && t.deductFromBalance !== false)
-    .reduce((sum, t) => sum + t.amount, 0);
-  return { income, expense, balance: income - expenseForBalance - reserveDeducted };
+    .reduce((sum, t) => sum + t.amount, 0));
+  return { income, expense, balance: roundCurrency(income - expenseForBalance - reserveDeducted) };
 }
 
 function getPreviousMonth(monthStr) {
@@ -68,10 +68,12 @@ function renderChart() {
     if (!categoriesData[key]) {
       categoriesData[key] = { name: catData.name, icon: catData.icon, color: catData.color, type: t.type, total: 0 };
     }
-    categoriesData[key].total += t.amount;
+    categoriesData[key].total = roundCurrency(categoriesData[key].total + t.amount);
     hasData = true;
     if (t.type === 'income') incomeTotal += t.amount;
   });
+
+  incomeTotal = roundCurrency(incomeTotal);
 
   const svg = document.getElementById('mainChart');
   const chartTotal = document.getElementById('chartTotal');
@@ -196,7 +198,7 @@ function renderCategories() {
         count: 0
       };
     }
-    grouped[t.type][t.category].total += t.amount;
+    grouped[t.type][t.category].total = roundCurrency(grouped[t.type][t.category].total + t.amount);
     grouped[t.type][t.category].count++;
   });
 
@@ -212,7 +214,7 @@ function renderCategories() {
     if (!grouped[typeKey]) return;
     const tc = typeConfig[typeKey];
     const cats = Object.values(grouped[typeKey]).sort((a, b) => b.total - a.total);
-    const typeTotal = cats.reduce((s, c) => s + c.total, 0);
+    const typeTotal = roundCurrency(cats.reduce((s, c) => s + c.total, 0));
 
     html += `
       <details class="cat-tree-type ${tc.cls}" open>
@@ -322,7 +324,7 @@ function renderFullHistory() {
     if (!tree[typeKey]) return;
     const tc = TYPE_CONFIG[typeKey];
     const allTxInType = Object.values(tree[typeKey]).flat();
-    const typeTotal   = allTxInType.reduce((s, t) => s + t.amount, 0);
+    const typeTotal   = roundCurrency(allTxInType.reduce((s, t) => s + t.amount, 0));
     const typeCount   = allTxInType.length;
 
     html += `
@@ -343,7 +345,7 @@ function renderFullHistory() {
       const catName  = catData ? catData.name : catKey;
       const catIcon  = catData ? catData.icon : '💰';
       const catBg    = catData ? catData.bg   : '#F3F4F6';
-      const catTotal = txs.reduce((s, t) => s + t.amount, 0);
+      const catTotal = roundCurrency(txs.reduce((s, t) => s + t.amount, 0));
 
       html += `
         <details class="tree-category" open>

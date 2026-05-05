@@ -31,7 +31,7 @@ function saveTransaction() {
   const transactionData = {
     type,
     category,
-    amount: parseFloat(amount.toFixed(2)),
+    amount: roundCurrency(amount),
     date,
     description: description || categoryData.name,
     deductFromBalance,
@@ -49,9 +49,9 @@ function saveTransaction() {
         const oldGoal = state.goals.find(g => g.id === oldTx.goalId);
         if (oldGoal) {
           if (oldTx.type === 'expense') {
-            oldGoal.currentAmount = oldGoal.currentAmount + oldTx.amount;
+            oldGoal.currentAmount = roundCurrency(oldGoal.currentAmount + oldTx.amount);
           } else if (oldTx.type === 'reserve') {
-            oldGoal.currentAmount = Math.max(0, oldGoal.currentAmount - oldTx.amount);
+            oldGoal.currentAmount = Math.max(0, roundCurrency(oldGoal.currentAmount - oldTx.amount));
           }
           oldGoal.updatedAt = new Date().toISOString();
         }
@@ -60,7 +60,7 @@ function saveTransaction() {
       if (oldTx.debtId && oldTx.type === 'expense') {
         const oldDebt = state.debts.find(d => d.id === oldTx.debtId);
         if (oldDebt) {
-          oldDebt.paidAmount = Math.max(0, oldDebt.paidAmount - oldTx.amount);
+          oldDebt.paidAmount = Math.max(0, roundCurrency(oldDebt.paidAmount - oldTx.amount));
           oldDebt.status = oldDebt.paidAmount >= oldDebt.totalAmount ? 'paid_off' : 'active';
           oldDebt.updatedAt = new Date().toISOString();
         }
@@ -70,9 +70,9 @@ function saveTransaction() {
         const newGoal = state.goals.find(g => g.id === transactionData.goalId);
         if (newGoal) {
           if (transactionData.type === 'expense') {
-            newGoal.currentAmount = Math.max(0, newGoal.currentAmount - transactionData.amount);
+            newGoal.currentAmount = Math.max(0, roundCurrency(newGoal.currentAmount - transactionData.amount));
           } else if (transactionData.type === 'reserve') {
-            newGoal.currentAmount = newGoal.currentAmount + transactionData.amount;
+            newGoal.currentAmount = roundCurrency(newGoal.currentAmount + transactionData.amount);
           }
           newGoal.updatedAt = new Date().toISOString();
         }
@@ -81,7 +81,7 @@ function saveTransaction() {
       if (transactionData.debtId && transactionData.type === 'expense') {
         const newDebt = state.debts.find(d => d.id === transactionData.debtId);
         if (newDebt) {
-          newDebt.paidAmount = Math.min(newDebt.totalAmount, newDebt.paidAmount + transactionData.amount);
+          newDebt.paidAmount = Math.min(newDebt.totalAmount, roundCurrency(newDebt.paidAmount + transactionData.amount));
           newDebt.status = newDebt.paidAmount >= newDebt.totalAmount ? 'paid_off' : 'active';
           newDebt.updatedAt = new Date().toISOString();
         }
@@ -95,9 +95,9 @@ function saveTransaction() {
       const goal = state.goals.find(g => g.id === transactionData.goalId);
       if (goal) {
         if (transactionData.type === 'expense') {
-          goal.currentAmount = Math.max(0, goal.currentAmount - transactionData.amount);
+          goal.currentAmount = Math.max(0, roundCurrency(goal.currentAmount - transactionData.amount));
         } else if (transactionData.type === 'reserve') {
-          goal.currentAmount = goal.currentAmount + transactionData.amount;
+          goal.currentAmount = roundCurrency(goal.currentAmount + transactionData.amount);
         }
         goal.updatedAt = new Date().toISOString();
       }
@@ -105,7 +105,7 @@ function saveTransaction() {
     if (transactionData.debtId && transactionData.type === 'expense') {
       const debt = state.debts.find(d => d.id === transactionData.debtId);
       if (debt) {
-        debt.paidAmount = Math.min(debt.totalAmount, debt.paidAmount + transactionData.amount);
+        debt.paidAmount = Math.min(debt.totalAmount, roundCurrency(debt.paidAmount + transactionData.amount));
         debt.status = debt.paidAmount >= debt.totalAmount ? 'paid_off' : 'active';
         debt.updatedAt = new Date().toISOString();
       }
@@ -137,9 +137,9 @@ function deleteTransaction(id) {
     const goal = state.goals.find(g => g.id === tx.goalId);
     if (goal) {
       if (tx.type === 'expense') {
-        goal.currentAmount = goal.currentAmount + tx.amount;
+        goal.currentAmount = roundCurrency(goal.currentAmount + tx.amount);
       } else if (tx.type === 'reserve') {
-        goal.currentAmount = Math.max(0, goal.currentAmount - tx.amount);
+        goal.currentAmount = Math.max(0, roundCurrency(goal.currentAmount - tx.amount));
       }
       goal.updatedAt = new Date().toISOString();
     }
@@ -147,7 +147,7 @@ function deleteTransaction(id) {
   if (tx && tx.debtId && tx.type === 'expense') {
     const debt = state.debts.find(d => d.id === tx.debtId);
     if (debt) {
-      debt.paidAmount = Math.max(0, debt.paidAmount - tx.amount);
+      debt.paidAmount = Math.max(0, roundCurrency(debt.paidAmount - tx.amount));
       debt.status = debt.paidAmount >= debt.totalAmount ? 'paid_off' : 'active';
       debt.updatedAt = new Date().toISOString();
     }

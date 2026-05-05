@@ -313,8 +313,8 @@ function saveGoal() {
 
   const goalData = {
     name: name.replace(/[\x00-\x1F\x7F]/g, '').substring(0, 100),
-    targetAmount: parseFloat(target.toFixed(2)),
-    currentAmount: Math.max(0, parseFloat(current.toFixed(2))),
+    targetAmount: roundCurrency(target),
+    currentAmount: Math.max(0, roundCurrency(current)),
     updatedAt: new Date().toISOString()
   };
 
@@ -433,10 +433,10 @@ function saveDebt() {
   const debtData = {
     name: name.replace(/[\x00-\x1F\x7F]/g, '').substring(0, 100),
     creditor: creditor.replace(/[\x00-\x1F\x7F]/g, '').substring(0, 100),
-    totalAmount: parseFloat(total.toFixed(2)),
-    paidAmount: Math.max(0, parseFloat(paid.toFixed(2))),
+    totalAmount: roundCurrency(total),
+    paidAmount: Math.max(0, roundCurrency(paid)),
     installmentCount: installments,
-    installmentValue: Math.max(0, parseFloat(installmentValue.toFixed(2))),
+    installmentValue: Math.max(0, roundCurrency(installmentValue)),
     dueDay: dueDay,
     status: paid >= total ? 'paid_off' : 'active',
     updatedAt: new Date().toISOString()

@@ -43,3 +43,8 @@ const compareMonths = (monthA, monthB) => {
   if (monthA > monthB) return 1;
   return 0;
 };
+
+const roundCurrency = (value) => {
+  if (typeof value !== 'number' || isNaN(value)) return 0;
+  return Math.round(value * 100) / 100;
+};
